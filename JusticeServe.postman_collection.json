@@ -1,0 +1,844 @@
+{
+  "info": {
+    "name": "JusticeServe - Legal Case Management API",
+    "_postman_id": "justiceserve-2025",
+    "description": "Complete API collection for JusticeServe Legal Case & Court Management System.\n\nBase URL: http://localhost:8080\n\nAuthentication: JWT Bearer Token\nAfter login, copy the token from the response and set it in the collection variable 'jwt_token'.\n\nCollection Variables:\n- base_url: http://localhost:8080\n- jwt_token: (set after login)\n- citizen_id: (set after creating citizen)\n- case_id: (set after filing case)\n- hearing_id: (set after scheduling hearing)\n- judgment_id: (set after recording judgment)\n- user_id: (set after register/login)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "jwt_token", "value": "", "type": "string" },
+    { "key": "user_id", "value": "1", "type": "string" },
+    { "key": "citizen_id", "value": "1", "type": "string" },
+    { "key": "case_id", "value": "1", "type": "string" },
+    { "key": "hearing_id", "value": "1", "type": "string" },
+    { "key": "judgment_id", "value": "1", "type": "string" },
+    { "key": "order_id", "value": "1", "type": "string" },
+    { "key": "doc_id", "value": "1", "type": "string" },
+    { "key": "notification_id", "value": "1", "type": "string" },
+    { "key": "compliance_id", "value": "1", "type": "string" },
+    { "key": "audit_id", "value": "1", "type": "string" },
+    { "key": "report_id", "value": "1", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{jwt_token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "01 - Authentication",
+      "description": "Public endpoints - no token required. Register users and login to get JWT token.",
+      "item": [
+        {
+          "name": "Register - Admin",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('jwt_token', pm.response.json().token); pm.collectionVariables.set('user_id', pm.response.json().userId); }"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"System Administrator\",\n  \"email\": \"admin@justiceserve.gov\",\n  \"password\": \"Admin@123\",\n  \"role\": \"ADMIN\",\n  \"phone\": \"9876543210\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Citizen",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Rajesh Kumar\",\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"Citizen@123\",\n  \"role\": \"CITIZEN\",\n  \"phone\": \"9000000001\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Lawyer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Adv. Priya Sharma\",\n  \"email\": \"priya.sharma@law.com\",\n  \"password\": \"Lawyer@123\",\n  \"role\": \"LAWYER\",\n  \"phone\": \"9000000002\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Judge",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Hon. Justice Arun Mehta\",\n  \"email\": \"judge.mehta@court.gov\",\n  \"password\": \"Judge@123\",\n  \"role\": \"JUDGE\",\n  \"phone\": \"9000000003\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Clerk",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Suresh Clerk\",\n  \"email\": \"suresh.clerk@court.gov\",\n  \"password\": \"Clerk@123\",\n  \"role\": \"CLERK\",\n  \"phone\": \"9000000004\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Compliance Officer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Meena Compliance\",\n  \"email\": \"meena.compliance@court.gov\",\n  \"password\": \"Compliance@123\",\n  \"role\": \"COMPLIANCE\",\n  \"phone\": \"9000000005\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Auditor",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ravi Auditor\",\n  \"email\": \"ravi.auditor@gov.in\",\n  \"password\": \"Auditor@123\",\n  \"role\": \"AUDITOR\",\n  \"phone\": \"9000000006\"\n}" }
+          }
+        },
+        {
+          "name": "Login - Admin",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('jwt_token', pm.response.json().token); pm.collectionVariables.set('user_id', pm.response.json().userId); }"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@justiceserve.gov\",\n  \"password\": \"Admin@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login - Citizen",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('jwt_token', pm.response.json().token); }"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"Citizen@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login - Judge",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('jwt_token', pm.response.json().token); }"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"judge.mehta@court.gov\",\n  \"password\": \"Judge@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login - Lawyer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"priya.sharma@law.com\",\n  \"password\": \"Lawyer@123\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - User Management (Admin)",
+      "description": "Admin-only user management endpoints. Manage all system users, roles, and account status.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users", "host": ["{{base_url}}"], "path": ["api","users"] }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Get Users By Role - JUDGE",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/role/JUDGE", "host": ["{{base_url}}"], "path": ["api","users","role","JUDGE"] }
+          }
+        },
+        {
+          "name": "Get Users By Role - LAWYER",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/role/LAWYER", "host": ["{{base_url}}"], "path": ["api","users","role","LAWYER"] }
+          }
+        },
+        {
+          "name": "Get Users By Role - CITIZEN",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/role/CITIZEN", "host": ["{{base_url}}"], "path": ["api","users","role","CITIZEN"] }
+          }
+        },
+        {
+          "name": "Update User Status - INACTIVE",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}/status?status=INACTIVE", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}","status"], "query": [{"key":"status","value":"INACTIVE"}] }
+          }
+        },
+        {
+          "name": "Update User Status - ACTIVE",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}/status?status=ACTIVE", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}","status"], "query": [{"key":"status","value":"ACTIVE"}] }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Citizen Registration",
+      "description": "Citizen profile management. A citizen must register a profile after creating a user account before filing cases.",
+      "item": [
+        {
+          "name": "Create Citizen Profile",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('citizen_id', pm.response.json().citizenId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/citizens", "host": ["{{base_url}}"], "path": ["api","citizens"] },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": 2,\n  \"name\": \"Rajesh Kumar\",\n  \"dob\": \"1985-06-15\",\n  \"gender\": \"MALE\",\n  \"address\": \"12, MG Road, Bangalore, Karnataka - 560001\",\n  \"contactInfo\": \"rajesh.kumar@gmail.com | 9000000001\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Citizens",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/citizens", "host": ["{{base_url}}"], "path": ["api","citizens"] }
+          }
+        },
+        {
+          "name": "Get Citizen By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}"] }
+          }
+        },
+        {
+          "name": "Get Citizen By User ID (My Profile)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/citizens/user/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","citizens","user","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Update Citizen Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": 2,\n  \"name\": \"Rajesh Kumar\",\n  \"dob\": \"1985-06-15\",\n  \"gender\": \"MALE\",\n  \"address\": \"45, Brigade Road, Bangalore, Karnataka - 560025\",\n  \"contactInfo\": \"rajesh.kumar@gmail.com | 9000000001\"\n}" }
+          }
+        },
+        {
+          "name": "Upload Citizen Document",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('doc_id', pm.response.json().documentId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}/documents", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}","documents"] },
+            "body": { "mode": "raw", "raw": "{\n  \"docType\": \"ID_PROOF\",\n  \"fileUri\": \"/uploads/citizens/1/aadhaar_card.pdf\"\n}" }
+          }
+        },
+        {
+          "name": "Upload Citizen Document - LEGAL_DOC",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}/documents", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}","documents"] },
+            "body": { "mode": "raw", "raw": "{\n  \"docType\": \"LEGAL_DOC\",\n  \"fileUri\": \"/uploads/citizens/1/power_of_attorney.pdf\"\n}" }
+          }
+        },
+        {
+          "name": "Get Citizen Documents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}/documents", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}","documents"] }
+          }
+        },
+        {
+          "name": "Verify Citizen Document - VERIFIED (Clerk)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}/documents/{{doc_id}}/verify?status=VERIFIED", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}","documents","{{doc_id}}","verify"], "query": [{"key":"status","value":"VERIFIED"}] }
+          }
+        },
+        {
+          "name": "Verify Citizen Document - REJECTED (Clerk)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/citizens/{{citizen_id}}/documents/{{doc_id}}/verify?status=REJECTED", "host": ["{{base_url}}"], "path": ["api","citizens","{{citizen_id}}","documents","{{doc_id}}","verify"], "query": [{"key":"status","value":"REJECTED"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Case Filing & Management",
+      "description": "Core case lifecycle management. File cases, update status, manage documents.",
+      "item": [
+        {
+          "name": "File New Case (Citizen/Lawyer)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('case_id', pm.response.json().caseId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cases", "host": ["{{base_url}}"], "path": ["api","cases"] },
+            "body": { "mode": "raw", "raw": "{\n  \"citizenId\": 1,\n  \"lawyerId\": 3,\n  \"title\": \"Property Dispute - Unauthorized Encroachment\",\n  \"description\": \"Respondent has illegally encroached upon 500 sq ft of petitioner's registered property at Survey No. 123, Bangalore. Despite multiple legal notices, the encroachment continues.\"\n}" }
+          }
+        },
+        {
+          "name": "File Case Without Lawyer (Self-represented)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cases", "host": ["{{base_url}}"], "path": ["api","cases"] },
+            "body": { "mode": "raw", "raw": "{\n  \"citizenId\": 1,\n  \"title\": \"Consumer Complaint - Defective Product\",\n  \"description\": \"Purchased refrigerator from XYZ Electronics on 01-Jan-2024. Unit stopped working after 2 months. Company refused warranty claim.\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Cases",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases", "host": ["{{base_url}}"], "path": ["api","cases"] }
+          }
+        },
+        {
+          "name": "Get Case By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}"] }
+          }
+        },
+        {
+          "name": "Get Cases By Citizen",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/citizen/{{citizen_id}}", "host": ["{{base_url}}"], "path": ["api","cases","citizen","{{citizen_id}}"] }
+          }
+        },
+        {
+          "name": "Get Cases By Lawyer",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/lawyer/3", "host": ["{{base_url}}"], "path": ["api","cases","lawyer","3"] }
+          }
+        },
+        {
+          "name": "Get Cases By Status - FILED",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/status/FILED", "host": ["{{base_url}}"], "path": ["api","cases","status","FILED"] }
+          }
+        },
+        {
+          "name": "Get Cases By Status - ACTIVE",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/status/ACTIVE", "host": ["{{base_url}}"], "path": ["api","cases","status","ACTIVE"] }
+          }
+        },
+        {
+          "name": "Get Cases By Status - CLOSED",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/status/CLOSED", "host": ["{{base_url}}"], "path": ["api","cases","status","CLOSED"] }
+          }
+        },
+        {
+          "name": "Update Case Status - UNDER_REVIEW (Clerk)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/status?status=UNDER_REVIEW", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","status"], "query": [{"key":"status","value":"UNDER_REVIEW"}] }
+          }
+        },
+        {
+          "name": "Update Case Status - ACTIVE (Clerk/Judge)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/status?status=ACTIVE", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","status"], "query": [{"key":"status","value":"ACTIVE"}] }
+          }
+        },
+        {
+          "name": "Update Case Status - DISMISSED (Judge)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/status?status=DISMISSED", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","status"], "query": [{"key":"status","value":"DISMISSED"}] }
+          }
+        },
+        {
+          "name": "Upload Case Document - PETITION",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('doc_id', pm.response.json().documentId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/documents", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","documents"] },
+            "body": { "mode": "raw", "raw": "{\n  \"docType\": \"PETITION\",\n  \"fileUri\": \"/uploads/cases/1/petition.pdf\"\n}" }
+          }
+        },
+        {
+          "name": "Upload Case Document - EVIDENCE",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/documents", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","documents"] },
+            "body": { "mode": "raw", "raw": "{\n  \"docType\": \"EVIDENCE\",\n  \"fileUri\": \"/uploads/cases/1/land_registry_copy.pdf\"\n}" }
+          }
+        },
+        {
+          "name": "Get Case Documents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/documents", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","documents"] }
+          }
+        },
+        {
+          "name": "Verify Case Document - VERIFIED (Clerk)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/cases/{{case_id}}/documents/{{doc_id}}/verify?status=VERIFIED", "host": ["{{base_url}}"], "path": ["api","cases","{{case_id}}","documents","{{doc_id}}","verify"], "query": [{"key":"status","value":"VERIFIED"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Hearing Scheduling",
+      "description": "Schedule and manage court hearings. Record proceedings during hearings.",
+      "item": [
+        {
+          "name": "Schedule Hearing (Clerk/Judge)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('hearing_id', pm.response.json().hearingId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/hearings", "host": ["{{base_url}}"], "path": ["api","hearings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"caseId\": 1,\n  \"judgeId\": 4,\n  \"date\": \"2025-02-15\",\n  \"time\": \"10:30:00\"\n}" }
+          }
+        },
+        {
+          "name": "Schedule Second Hearing (Adjourned)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/hearings", "host": ["{{base_url}}"], "path": ["api","hearings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"caseId\": 1,\n  \"judgeId\": 4,\n  \"date\": \"2025-03-10\",\n  \"time\": \"11:00:00\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Hearings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/hearings", "host": ["{{base_url}}"], "path": ["api","hearings"] }
+          }
+        },
+        {
+          "name": "Get Hearing By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}"] }
+          }
+        },
+        {
+          "name": "Get Hearings By Case",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/hearings/case/{{case_id}}", "host": ["{{base_url}}"], "path": ["api","hearings","case","{{case_id}}"] }
+          }
+        },
+        {
+          "name": "Get Hearings By Judge",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/hearings/judge/4", "host": ["{{base_url}}"], "path": ["api","hearings","judge","4"] }
+          }
+        },
+        {
+          "name": "Update Hearing Status - IN_PROGRESS (Judge)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/status?status=IN_PROGRESS", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","status"], "query": [{"key":"status","value":"IN_PROGRESS"}] }
+          }
+        },
+        {
+          "name": "Update Hearing Status - COMPLETED (Judge)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/status?status=COMPLETED", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","status"], "query": [{"key":"status","value":"COMPLETED"}] }
+          }
+        },
+        {
+          "name": "Update Hearing Status - ADJOURNED (Judge)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/status?status=ADJOURNED", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","status"], "query": [{"key":"status","value":"ADJOURNED"}] }
+          }
+        },
+        {
+          "name": "Add Proceeding Notes (Judge/Clerk)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/proceedings", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","proceedings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"hearingId\": 1,\n  \"notes\": \"Both parties appeared. Petitioner presented land registry documents as evidence. Respondent's counsel requested time to examine documents. Next hearing scheduled for 10-Mar-2025.\",\n  \"status\": \"ADJOURNED\"\n}" }
+          }
+        },
+        {
+          "name": "Add Final Proceeding Notes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/proceedings", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","proceedings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"hearingId\": 1,\n  \"notes\": \"All evidence examined. Arguments completed by both sides. Case reserved for judgment. Judgment to be delivered on 20-Mar-2025.\",\n  \"status\": \"COMPLETED\"\n}" }
+          }
+        },
+        {
+          "name": "Get Proceedings By Hearing",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/hearings/{{hearing_id}}/proceedings", "host": ["{{base_url}}"], "path": ["api","hearings","{{hearing_id}}","proceedings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Judgment & Court Orders",
+      "description": "Record judgments and issue court orders. Finalizing judgment closes the case.",
+      "item": [
+        {
+          "name": "Record Judgment - DRAFT (Judge)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('judgment_id', pm.response.json().judgmentId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/judgments", "host": ["{{base_url}}"], "path": ["api","judgments"] },
+            "body": { "mode": "raw", "raw": "{\n  \"caseId\": 1,\n  \"judgeId\": 4,\n  \"summary\": \"After careful examination of evidence and hearing arguments from both sides, the court finds that the respondent has illegally encroached upon the petitioner's registered property. The petitioner's claim is upheld. The respondent is directed to vacate the encroached land within 30 days.\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Judgments",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/judgments", "host": ["{{base_url}}"], "path": ["api","judgments"] }
+          }
+        },
+        {
+          "name": "Get Judgment By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/judgments/{{judgment_id}}", "host": ["{{base_url}}"], "path": ["api","judgments","{{judgment_id}}"] }
+          }
+        },
+        {
+          "name": "Get Judgments By Case",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/judgments/case/{{case_id}}", "host": ["{{base_url}}"], "path": ["api","judgments","case","{{case_id}}"] }
+          }
+        },
+        {
+          "name": "Finalize Judgment (Judge) - CLOSES CASE",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/judgments/{{judgment_id}}/finalize", "host": ["{{base_url}}"], "path": ["api","judgments","{{judgment_id}}","finalize"] }
+          }
+        },
+        {
+          "name": "Issue Court Order (Judge)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('order_id', pm.response.json().orderId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/court-orders", "host": ["{{base_url}}"], "path": ["api","court-orders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"caseId\": 1,\n  \"judgeId\": 4,\n  \"description\": \"STAY ORDER: Respondent is hereby restrained from making any further construction or modifications to the disputed property Survey No. 123 until the final disposal of this case.\"\n}" }
+          }
+        },
+        {
+          "name": "Issue Final Eviction Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/court-orders", "host": ["{{base_url}}"], "path": ["api","court-orders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"caseId\": 1,\n  \"judgeId\": 4,\n  \"description\": \"EVICTION ORDER: Respondent must vacate 500 sq ft encroached area at Survey No. 123 within 30 days of this order. Non-compliance will attract contempt of court proceedings.\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Court Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/court-orders", "host": ["{{base_url}}"], "path": ["api","court-orders"] }
+          }
+        },
+        {
+          "name": "Get Court Order By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/court-orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","court-orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Get Orders By Case",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/court-orders/case/{{case_id}}", "host": ["{{base_url}}"], "path": ["api","court-orders","case","{{case_id}}"] }
+          }
+        },
+        {
+          "name": "Update Order Status - SERVED",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/court-orders/{{order_id}}/status?status=SERVED", "host": ["{{base_url}}"], "path": ["api","court-orders","{{order_id}}","status"], "query": [{"key":"status","value":"SERVED"}] }
+          }
+        },
+        {
+          "name": "Update Order Status - EXPIRED",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/court-orders/{{order_id}}/status?status=EXPIRED", "host": ["{{base_url}}"], "path": ["api","court-orders","{{order_id}}","status"], "query": [{"key":"status","value":"EXPIRED"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Compliance & Audits",
+      "description": "Compliance officers create and manage compliance records. Auditors and compliance officers conduct formal audits.",
+      "item": [
+        {
+          "name": "Create Compliance Record - CASE (Compliance Officer)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('compliance_id', pm.response.json().complianceId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/compliance", "host": ["{{base_url}}"], "path": ["api","compliance"] },
+            "body": { "mode": "raw", "raw": "{\n  \"entityId\": 1,\n  \"type\": \"CASE\",\n  \"result\": \"COMPLIANT\",\n  \"notes\": \"Case filing procedures followed correctly. All mandatory fields present. Citizen identity verified. Documents submitted within prescribed timeline.\"\n}" }
+          }
+        },
+        {
+          "name": "Create Compliance Record - HEARING (Compliance Officer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/compliance", "host": ["{{base_url}}"], "path": ["api","compliance"] },
+            "body": { "mode": "raw", "raw": "{\n  \"entityId\": 1,\n  \"type\": \"HEARING\",\n  \"result\": \"COMPLIANT\",\n  \"notes\": \"Hearing conducted within prescribed 60-day window from case filing. Proper notice given to all parties. Proceedings recorded accurately.\"\n}" }
+          }
+        },
+        {
+          "name": "Create Compliance Record - NON_COMPLIANT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/compliance", "host": ["{{base_url}}"], "path": ["api","compliance"] },
+            "body": { "mode": "raw", "raw": "{\n  \"entityId\": 2,\n  \"type\": \"JUDGMENT\",\n  \"result\": \"NON_COMPLIANT\",\n  \"notes\": \"Judgment delivery exceeded 90-day prescribed period. Delay in documentation. Requires escalation to senior judicial officer.\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Compliance Records",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/compliance", "host": ["{{base_url}}"], "path": ["api","compliance"] }
+          }
+        },
+        {
+          "name": "Get Compliance Record By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/compliance/{{compliance_id}}", "host": ["{{base_url}}"], "path": ["api","compliance","{{compliance_id}}"] }
+          }
+        },
+        {
+          "name": "Update Compliance Record",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/compliance/{{compliance_id}}", "host": ["{{base_url}}"], "path": ["api","compliance","{{compliance_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"entityId\": 1,\n  \"type\": \"CASE\",\n  \"result\": \"COMPLIANT\",\n  \"notes\": \"Updated after re-verification. All compliance criteria met. Documents re-examined and found in order.\"\n}" }
+          }
+        },
+        {
+          "name": "Create Audit (Compliance/Auditor)",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('audit_id', pm.response.json().auditId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/audits", "host": ["{{base_url}}"], "path": ["api","audits"] },
+            "body": { "mode": "raw", "raw": "{\n  \"officerId\": 6,\n  \"scope\": \"Q1 2025 - Case Filing Compliance Audit\",\n  \"findings\": \"Audited 45 cases filed in Q1 2025. 42 cases (93%) fully compliant with filing procedures. 3 cases had minor documentation gaps - notified for correction. Overall compliance rate satisfactory.\"\n}" }
+          }
+        },
+        {
+          "name": "Create Audit - Government Auditor Scope",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/audits", "host": ["{{base_url}}"], "path": ["api","audits"] },
+            "body": { "mode": "raw", "raw": "{\n  \"officerId\": 7,\n  \"scope\": \"Annual Judicial Performance Audit 2024\",\n  \"findings\": \"Annual review of court performance metrics. Average case disposal time: 8.5 months. Pending cases: 234. Judgment delivery compliance: 87%. Hearing scheduling efficiency: 92%. Recommendations: Increase judge allocation for property dispute cases.\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Audits",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/audits", "host": ["{{base_url}}"], "path": ["api","audits"] }
+          }
+        },
+        {
+          "name": "Get Audit By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/audits/{{audit_id}}", "host": ["{{base_url}}"], "path": ["api","audits","{{audit_id}}"] }
+          }
+        },
+        {
+          "name": "Update Audit Status - REVIEW",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/audits/{{audit_id}}/status?status=REVIEW", "host": ["{{base_url}}"], "path": ["api","audits","{{audit_id}}","status"], "query": [{"key":"status","value":"REVIEW"}] }
+          }
+        },
+        {
+          "name": "Update Audit Status - CLOSED",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/audits/{{audit_id}}/status?status=CLOSED", "host": ["{{base_url}}"], "path": ["api","audits","{{audit_id}}","status"], "query": [{"key":"status","value":"CLOSED"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Reports & Analytics",
+      "description": "Generate and retrieve analytics reports scoped to cases, hearings, judgments, or compliance.",
+      "item": [
+        {
+          "name": "Generate Case Report",
+          "event": [{ "listen": "test", "script": { "exec": ["if(pm.response.code === 200){ pm.collectionVariables.set('report_id', pm.response.json().reportId); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reports/generate", "host": ["{{base_url}}"], "path": ["api","reports","generate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"CASE\",\n  \"generatedBy\": 1\n}" }
+          }
+        },
+        {
+          "name": "Generate Hearing Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reports/generate", "host": ["{{base_url}}"], "path": ["api","reports","generate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"HEARING\",\n  \"generatedBy\": 1\n}" }
+          }
+        },
+        {
+          "name": "Generate Judgment Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reports/generate", "host": ["{{base_url}}"], "path": ["api","reports","generate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"JUDGMENT\",\n  \"generatedBy\": 1\n}" }
+          }
+        },
+        {
+          "name": "Generate Compliance Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reports/generate", "host": ["{{base_url}}"], "path": ["api","reports","generate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"COMPLIANCE\",\n  \"generatedBy\": 6\n}" }
+          }
+        },
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/reports", "host": ["{{base_url}}"], "path": ["api","reports"] }
+          }
+        },
+        {
+          "name": "Get Report By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/reports/{{report_id}}", "host": ["{{base_url}}"], "path": ["api","reports","{{report_id}}"] }
+          }
+        },
+        {
+          "name": "Get Reports By Scope - CASE",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/reports/scope/CASE", "host": ["{{base_url}}"], "path": ["api","reports","scope","CASE"] }
+          }
+        },
+        {
+          "name": "Get Reports By Scope - COMPLIANCE",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/reports/scope/COMPLIANCE", "host": ["{{base_url}}"], "path": ["api","reports","scope","COMPLIANCE"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Notifications",
+      "description": "In-app notification system. Notifications are auto-generated by the system. Users can view and mark them read.",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/notifications/user/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","notifications","user","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Get Unread Notification Count (Badge)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/notifications/user/{{user_id}}/unread-count", "host": ["{{base_url}}"], "path": ["api","notifications","user","{{user_id}}","unread-count"] }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/api/notifications/{{notification_id}}/read", "host": ["{{base_url}}"], "path": ["api","notifications","{{notification_id}}","read"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Audit Logs (Admin/Auditor)",
+      "description": "Immutable system audit trail. All significant actions are logged automatically. Read-only.",
+      "item": [
+        {
+          "name": "Get All Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/audit-logs", "host": ["{{base_url}}"], "path": ["api","audit-logs"] }
+          }
+        },
+        {
+          "name": "Get Audit Logs By User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/audit-logs/user/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","audit-logs","user","{{user_id}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
