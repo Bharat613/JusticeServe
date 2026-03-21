@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JusticeServe — Interactive ER Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--surf:#0e1118;--card:#131720;--card2:#181e2c;
+  --bdr:rgba(255,255,255,0.06);--bdr2:rgba(255,255,255,0.12);
+  --txt:#dde3f5;--mut:#4a5270;--mut2:#7882a4;
+  --font:'Syne',sans-serif;--mono:'DM Mono',monospace;
+  --glow:rgba(79,142,247,0.35);
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:var(--font)}
+
+/* ── Top bar ── */
+.top{height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--bdr);background:var(--surf);flex-shrink:0;z-index:10;position:relative}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-ico{width:30px;height:30px;background:linear-gradient(135deg,#4f8ef7,#7c4fff);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand-sub{font-size:10px;color:var(--mut2);font-family:var(--mono);margin-left:4px;opacity:.7}
+.top-right{display:flex;align-items:center;gap:16px}
+.hint{font-size:11px;color:var(--mut2);font-family:var(--mono);
+  background:rgba(255,255,255,.04);border:1px solid var(--bdr2);
+  padding:5px 12px;border-radius:6px;display:flex;align-items:center;gap:6px}
+.hint-dot{width:6px;height:6px;border-radius:50%;background:#4f8ef7;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.btn-clear{font-size:11px;color:var(--mut2);font-family:var(--mono);background:transparent;
+  border:1px solid var(--bdr2);padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s}
+.btn-clear:hover{color:var(--txt);border-color:rgba(255,255,255,.2)}
+
+/* ── Main layout ── */
+.main{display:flex;height:calc(100vh - 56px)}
+
+/* ── Canvas ── */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;cursor:grab}
+.canvas-wrap.dragging{cursor:grabbing}
+#canvas{position:absolute;transform-origin:0 0}
+
+/* ── SVG overlay for lines ── */
+#svg-lines{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+
+/* ── Table card ── */
+.tbl{position:absolute;width:230px;border-radius:10px;overflow:hidden;
+  border:1.5px solid var(--bdr);cursor:pointer;user-select:none;
+  transition:box-shadow .2s,border-color .2s;background:var(--card)}
+.tbl:hover{border-color:rgba(255,255,255,.18)!important;z-index:5}
+.tbl.sel{z-index:10;border-color:transparent!important}
+.tbl.connected{z-index:8;border-color:transparent!important}
+.tbl.dim{opacity:.2}
+
+.tbl-head{padding:9px 12px;font-size:11.5px;font-weight:600;font-family:var(--mono);
+  display:flex;align-items:center;gap:7px}
+.tbl-head .ic{font-size:13px}
+.tbl-body{background:var(--card)}
+.col{display:flex;align-items:center;padding:5px 12px;gap:6px;
+  border-bottom:1px solid var(--bdr);font-size:10.5px}
+.col:last-child{border-bottom:none}
+.col.pk{background:rgba(245,158,11,.05)}
+.col.fk{background:rgba(239,68,68,.05)}
+.bdg{font-family:var(--mono);font-size:8px;font-weight:600;
+  padding:1px 4px;border-radius:3px;flex-shrink:0;letter-spacing:.3px}
+.bpk{background:rgba(245,158,11,.2);color:#f59e0b}
+.bfk{background:rgba(239,68,68,.2);color:#f87171}
+.ben{background:rgba(139,92,246,.2);color:#a78bfa}
+.buq{background:rgba(20,184,166,.15);color:#2dd4bf}
+.cname{font-family:var(--mono);color:var(--txt);flex-shrink:0;font-size:10px}
+.ctype{font-size:9.5px;color:var(--mut2);margin-left:auto;text-align:right;max-width:100px;line-height:1.3}
+.ev{font-size:9px;color:var(--mut);font-family:var(--mono);
+  padding:3px 12px 4px;background:rgba(139,92,246,.04);
+  border-bottom:1px solid var(--bdr);line-height:1.5}
+
+/* ── Panel ── */
+.panel{width:360px;flex-shrink:0;border-left:1px solid var(--bdr);
+  background:var(--surf);overflow-y:auto;display:flex;flex-direction:column}
+.panel-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;color:var(--mut);text-align:center;padding:40px 28px}
+.panel-empty-ico{font-size:42px;opacity:.2}
+.panel-empty-txt{font-size:12px;line-height:1.7;max-width:200px}
+.panel-content{padding:20px;display:none}
+.panel-content.vis{display:block}
+.p-name{font-size:14px;font-weight:700;font-family:var(--mono);margin-bottom:3px}
+.p-sub{font-size:10px;color:var(--mut2);font-family:var(--mono);margin-bottom:6px}
+.p-desc{font-size:11.5px;color:var(--mut2);line-height:1.65;margin-bottom:18px;
+  padding:10px 12px;background:rgba(255,255,255,.03);border-radius:7px;border-left:2px solid}
+.p-sec{font-size:9px;color:var(--mut);font-family:var(--mono);
+  text-transform:uppercase;letter-spacing:.7px;margin:14px 0 7px}
+.conn-card{border-radius:8px;border:1px solid var(--bdr);overflow:hidden;
+  margin-bottom:6px;cursor:pointer;transition:border-color .15s,transform .1s}
+.conn-card:hover{border-color:var(--bdr2);transform:translateX(2px)}
+.conn-h{padding:8px 11px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.conn-b{padding:9px 11px;background:var(--card);font-size:10.5px;line-height:1.7;color:var(--mut2)}
+.conn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;
+  border-radius:4px;font-size:9px;font-weight:600;font-family:var(--mono);margin-bottom:4px}
+.conn-fk{font-size:10px;color:var(--mut);margin-top:3px}
+.conn-fk code{color:var(--txt);background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:9.5px}
+.conn-note{margin-top:5px;font-size:10.5px;color:var(--mut2);line-height:1.55;
+  background:rgba(255,255,255,.025);border-radius:5px;padding:6px 9px}
+.no-conn{font-size:10.5px;color:var(--mut);font-family:var(--mono);font-style:italic;
+  padding:8px 11px;background:var(--card);border-radius:7px;border:1px solid var(--bdr)}
+
+/* ── Mini legend ── */
+.legend{padding:10px 24px;border-top:1px solid var(--bdr);
+  display:flex;gap:14px;flex-wrap:wrap;flex-shrink:0}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mut2)}
+.ls{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.lc{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ll{width:16px;height:2px;border-radius:1px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">
+    <div class="brand-ico">⚖️</div>
+    <div class="brand-name">JusticeServe ER</div>
+    <div class="brand-sub">14 tables · 18 relations</div>
+  </div>
+  <div class="top-right">
+    <div class="hint"><span class="hint-dot"></span>Click a table · Drag to pan · Scroll to zoom</div>
+    <button class="btn-clear" id="btn-clear" onclick="clearSelection()" style="display:none">✕ Clear</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="canvas-wrap" id="wrap">
+    <div id="canvas">
+      <svg id="svg-lines" width="4000" height="3000"></svg>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="panel-empty" id="p-empty">
+      <div class="panel-empty-ico">⬡</div>
+      <div class="panel-empty-txt">Click any table to see its connections, field types, and relationship details</div>
+    </div>
+    <div class="panel-content" id="p-content"></div>
+    <div class="legend">
+      <div class="li"><div class="ls" style="background:#f59e0b"></div>PK</div>
+      <div class="li"><div class="ls" style="background:#f87171"></div>FK</div>
+      <div class="li"><div class="ls" style="background:#a78bfa"></div>ENUM</div>
+      <div class="li"><div class="ls" style="background:#2dd4bf"></div>UNIQUE</div>
+      <div class="li"><div class="ll" style="background:#ef4444"></div>outgoing FK</div>
+      <div class="li"><div class="ll" style="background:#22c55e"></div>incoming ref</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+const TABLES = {
+  users:{n:'users',ic:'👤',color:'#8b5cf6',
+    desc:'Central auth entity. Every actor (Citizen, Lawyer, Judge, Clerk, Admin, Compliance, Auditor) has one User record. Implements Spring Security UserDetails.',
+    cols:[
+      {pk:1,nm:'user_id',tp:'BIGINT AUTO_INCREMENT'},
+      {nm:'name',tp:'VARCHAR(100) NOT NULL'},
+      {en:1,nm:'role',tp:'ENUM NOT NULL'},
+      {ev:'CITIZEN|LAWYER|JUDGE|CLERK|ADMIN|COMPLIANCE|AUDITOR'},
+      {nm:'email',tp:'VARCHAR(100) UNIQUE',uq:1},
+      {nm:'phone',tp:'VARCHAR(20)'},
+      {nm:'password',tp:'VARCHAR (BCrypt)'},
+      {en:1,nm:'status',tp:'ENUM NOT NULL'},
+      {ev:'ACTIVE|INACTIVE'},
+    ]},
+  audit_logs:{n:'audit_logs',ic:'📋',color:'#8b5cf6',
+    desc:'Immutable system action trail. INSERT only — never updated or deleted. Every login, case filed, lawyer assigned, etc. is logged here.',
+    cols:[
+      {pk:1,nm:'audit_log_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'user_id',tp:'FK → users NOT NULL'},
+      {nm:'action',tp:'VARCHAR(100) NOT NULL'},
+      {ev:'USER_LOGIN|CASE_FILED|LAWYER_ASSIGNED|JUDGE_ASSIGNED|HEARING_SCHEDULED|...'},
+      {nm:'resource',tp:'VARCHAR(150) NOT NULL'},
+      {nm:'timestamp',tp:'DATETIME auto'},
+    ]},
+  citizens:{n:'citizens',ic:'🧑',color:'#14b8a6',
+    desc:'Profile data for registered citizens. Linked 1:1 with User account. Created after user registers.',
+    cols:[
+      {pk:1,nm:'citizen_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,uq:1,nm:'user_id',tp:'FK → users UNIQUE NOT NULL'},
+      {nm:'name',tp:'VARCHAR(100) NOT NULL'},
+      {nm:'dob',tp:'DATE'},
+      {nm:'gender',tp:'VARCHAR(10)'},
+      {nm:'address',tp:'TEXT'},
+      {nm:'contact_info',tp:'VARCHAR(200)'},
+      {en:1,nm:'status',tp:'ACTIVE|INACTIVE'},
+    ]},
+  citizen_documents:{n:'citizen_documents',ic:'📄',color:'#14b8a6',
+    desc:'Identity and legal documents uploaded by citizens. Verified by court clerk (PENDING → VERIFIED/REJECTED).',
+    cols:[
+      {pk:1,nm:'document_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'citizen_id',tp:'FK → citizens NOT NULL'},
+      {en:1,nm:'doc_type',tp:'ENUM NOT NULL'},
+      {ev:'PETITION|EVIDENCE|ORDER|ID_PROOF|LEGAL_DOC'},
+      {nm:'file_uri',tp:'VARCHAR(300) NOT NULL'},
+      {nm:'uploaded_date',tp:'DATE auto'},
+      {en:1,nm:'verification_status',tp:'default PENDING'},
+      {ev:'PENDING|VERIFIED|REJECTED'},
+    ]},
+  cases:{n:'cases',ic:'⚖️',color:'#4f8ef7',
+    desc:'Core entity. Legal case filed by citizen. lawyer_id and judge_id are nullable — assigned by clerk after filing.',
+    cols:[
+      {pk:1,nm:'case_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'citizen_id',tp:'FK → citizens NOT NULL'},
+      {fk:1,nm:'lawyer_id',tp:'FK → users nullable'},
+      {fk:1,nm:'judge_id',tp:'FK → users nullable'},
+      {nm:'title',tp:'VARCHAR(200) NOT NULL'},
+      {nm:'description',tp:'TEXT'},
+      {nm:'filed_date',tp:'DATE auto'},
+      {en:1,nm:'status',tp:'ENUM NOT NULL'},
+      {ev:'FILED|UNDER_REVIEW|ACTIVE|HEARING_SCHEDULED|JUDGMENT_PENDING|CLOSED|DISMISSED'},
+    ]},
+  case_documents:{n:'case_documents',ic:'📎',color:'#4f8ef7',
+    desc:'Petitions, evidence, orders attached to a case. Uploaded by citizen/lawyer. Verified by clerk.',
+    cols:[
+      {pk:1,nm:'document_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'case_id',tp:'FK → cases NOT NULL'},
+      {en:1,nm:'doc_type',tp:'ENUM NOT NULL'},
+      {ev:'PETITION|EVIDENCE|ORDER|ID_PROOF|LEGAL_DOC'},
+      {nm:'file_uri',tp:'VARCHAR(300) NOT NULL'},
+      {nm:'uploaded_date',tp:'DATE auto'},
+      {en:1,nm:'verification_status',tp:'default PENDING'},
+      {ev:'PENDING|VERIFIED|REJECTED'},
+    ]},
+  hearings:{n:'hearings',ic:'🏛️',color:'#f59e0b',
+    desc:'Scheduled hearing for a case. Scheduling updates case status → HEARING_SCHEDULED. Citizen and lawyer are notified.',
+    cols:[
+      {pk:1,nm:'hearing_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'case_id',tp:'FK → cases NOT NULL'},
+      {fk:1,nm:'judge_id',tp:'FK → users NOT NULL'},
+      {nm:'date',tp:'DATE NOT NULL'},
+      {nm:'time',tp:'TIME NOT NULL'},
+      {en:1,nm:'status',tp:'default SCHEDULED'},
+      {ev:'SCHEDULED|IN_PROGRESS|COMPLETED|ADJOURNED|CANCELLED'},
+    ]},
+  proceedings:{n:'proceedings',ic:'📝',color:'#f59e0b',
+    desc:'Notes and outcomes recorded during a hearing session by judge or clerk.',
+    cols:[
+      {pk:1,nm:'proceeding_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'hearing_id',tp:'FK → hearings NOT NULL'},
+      {nm:'notes',tp:'TEXT'},
+      {nm:'date',tp:'DATE auto'},
+      {nm:'status',tp:'VARCHAR(20) default IN_PROGRESS'},
+    ]},
+  judgments:{n:'judgments',ic:'🔨',color:'#ef4444',
+    desc:'Judgment by a judge. DRAFT = editable. FINAL = case automatically set to CLOSED. Citizen and lawyer notified.',
+    cols:[
+      {pk:1,nm:'judgment_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'case_id',tp:'FK → cases NOT NULL'},
+      {fk:1,nm:'judge_id',tp:'FK → users NOT NULL'},
+      {nm:'summary',tp:'TEXT'},
+      {nm:'date',tp:'DATE auto'},
+      {en:1,nm:'status',tp:'default DRAFT'},
+      {ev:'DRAFT | FINAL → triggers case CLOSED'},
+    ]},
+  court_orders:{n:'court_orders',ic:'📜',color:'#ef4444',
+    desc:'Court orders issued by a judge. Tracked ACTIVE → SERVED → EXPIRED. Citizen and lawyer notified on issue.',
+    cols:[
+      {pk:1,nm:'order_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'case_id',tp:'FK → cases NOT NULL'},
+      {fk:1,nm:'judge_id',tp:'FK → users NOT NULL'},
+      {nm:'description',tp:'TEXT'},
+      {nm:'date',tp:'DATE auto'},
+      {en:1,nm:'status',tp:'default ACTIVE'},
+      {ev:'ACTIVE|SERVED|EXPIRED'},
+    ]},
+  compliance_records:{n:'compliance_records',ic:'🛡️',color:'#22c55e',
+    desc:'Tracks judicial policy compliance per entity. Uses generic entity_id + type (no FK constraint by design).',
+    cols:[
+      {pk:1,nm:'compliance_id',tp:'BIGINT AUTO_INCREMENT'},
+      {nm:'entity_id',tp:'BIGINT generic ref'},
+      {en:1,nm:'type',tp:'ENUM NOT NULL'},
+      {ev:'CASE|HEARING|JUDGMENT'},
+      {en:1,nm:'result',tp:'default PENDING'},
+      {ev:'COMPLIANT|NON_COMPLIANT|PENDING'},
+      {nm:'date',tp:'DATE auto'},
+      {nm:'notes',tp:'TEXT'},
+    ]},
+  audits:{n:'audits',ic:'🔍',color:'#22c55e',
+    desc:'Formal audits by Compliance Officers or Auditors. Tracks scope, findings, and status.',
+    cols:[
+      {pk:1,nm:'audit_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'officer_id',tp:'FK → users NOT NULL'},
+      {nm:'scope',tp:'VARCHAR(200)'},
+      {nm:'findings',tp:'TEXT'},
+      {nm:'date',tp:'DATE auto'},
+      {en:1,nm:'status',tp:'default OPEN'},
+      {ev:'OPEN|REVIEW|CLOSED'},
+    ]},
+  reports:{n:'reports',ic:'📊',color:'#ec4899',
+    desc:'Analytics reports by admin/compliance. Metrics stored as JSON. generated_by is nullable.',
+    cols:[
+      {pk:1,nm:'report_id',tp:'BIGINT AUTO_INCREMENT'},
+      {en:1,nm:'scope',tp:'ENUM NOT NULL'},
+      {ev:'CASE|HEARING|JUDGMENT|COMPLIANCE'},
+      {nm:'metrics',tp:'TEXT (JSON)'},
+      {nm:'generated_date',tp:'DATE auto'},
+      {fk:1,nm:'generated_by',tp:'FK → users nullable'},
+    ]},
+  notifications:{n:'notifications',ic:'🔔',color:'#6366f1',
+    desc:'Auto-created on every case/hearing/judgment event. Supports per-user inbox with UNREAD/READ status.',
+    cols:[
+      {pk:1,nm:'notification_id',tp:'BIGINT AUTO_INCREMENT'},
+      {fk:1,nm:'user_id',tp:'FK → users NOT NULL'},
+      {nm:'entity_id',tp:'BIGINT generic ref'},
+      {nm:'message',tp:'TEXT'},
+      {en:1,nm:'category',tp:'ENUM NOT NULL'},
+      {ev:'CASE|HEARING|JUDGMENT|COMPLIANCE'},
+      {en:1,nm:'status',tp:'default UNREAD'},
+      {ev:'UNREAD|READ'},
+      {nm:'created_date',tp:'DATETIME auto'},
+    ]},
+};
+
+const RELS = [
+  {f:'audit_logs',    t:'users',            fk:'user_id',      card:'N : 1',  null:false,
+   desc:'Every audit log entry is attributed to the user who performed the action. Immutable record.'},
+  {f:'citizens',      t:'users',            fk:'user_id',      card:'1 : 1',  null:false,uq:true,
+   desc:'Each citizen profile is linked to exactly one User account. UNIQUE FK enforces the 1:1 constraint.'},
+  {f:'citizen_documents',t:'citizens',      fk:'citizen_id',   card:'N : 1',  null:false,
+   desc:'A citizen can upload many documents. Each document belongs to exactly one citizen.'},
+  {f:'cases',         t:'citizens',         fk:'citizen_id',   card:'N : 1',  null:false,
+   desc:'A citizen can file many cases. Each case must have exactly one filing citizen.'},
+  {f:'cases',         t:'users',            fk:'lawyer_id',    card:'N : 1',  null:true,
+   desc:'Lawyer assigned by clerk via PATCH /api/cases/{id}/assign-lawyer. Nullable at filing time.'},
+  {f:'cases',         t:'users',            fk:'judge_id',     card:'N : 1',  null:true,
+   desc:'Judge assigned by clerk via PATCH /api/cases/{id}/assign-judge. Nullable at filing time.'},
+  {f:'case_documents',t:'cases',            fk:'case_id',      card:'N : 1',  null:false,
+   desc:'Many documents can be attached to one case. Petitions, evidence, orders stored here.'},
+  {f:'hearings',      t:'cases',            fk:'case_id',      card:'N : 1',  null:false,
+   desc:'A case can have multiple hearings. Scheduling a hearing updates case status → HEARING_SCHEDULED.'},
+  {f:'hearings',      t:'users',            fk:'judge_id',     card:'N : 1',  null:false,
+   desc:'Every hearing must have an assigned judge who presides. NOT NULL — judge required to schedule.'},
+  {f:'proceedings',   t:'hearings',         fk:'hearing_id',   card:'N : 1',  null:false,
+   desc:'A hearing can have multiple proceedings. Each records session notes by judge/clerk.'},
+  {f:'judgments',     t:'cases',            fk:'case_id',      card:'N : 1',  null:false,
+   desc:'A case can have multiple judgment drafts. FINAL judgment automatically sets case → CLOSED.'},
+  {f:'judgments',     t:'users',            fk:'judge_id',     card:'N : 1',  null:false,
+   desc:'Every judgment is delivered by one judge.'},
+  {f:'court_orders',  t:'cases',            fk:'case_id',      card:'N : 1',  null:false,
+   desc:'Many court orders can be issued for one case. Lifecycle: ACTIVE → SERVED → EXPIRED.'},
+  {f:'court_orders',  t:'users',            fk:'judge_id',     card:'N : 1',  null:false,
+   desc:'Every court order is issued by one judge.'},
+  {f:'audits',        t:'users',            fk:'officer_id',   card:'N : 1',  null:false,
+   desc:'Audits are conducted by compliance officers or auditors (User with role=COMPLIANCE/AUDITOR).'},
+  {f:'reports',       t:'users',            fk:'generated_by', card:'N : 1',  null:true,
+   desc:'Report optionally links to the admin/compliance officer who generated it. Nullable.'},
+  {f:'notifications', t:'users',            fk:'user_id',      card:'N : 1',  null:false,
+   desc:'Notifications are sent to specific users. Auto-created by service layer on events.'},
+  {f:'compliance_records',t:null,           fk:'entity_id',    card:'generic',null:false,
+   desc:'entity_id is a generic reference resolved by the type field (CASE/HEARING/JUDGMENT). No FK constraint by design.'},
+];
+
+// ── Layout positions ──────────────────────────────────
+const POSITIONS = {
+  users:              {x:880,  y:80},
+  audit_logs:         {x:1180, y:80},
+  citizens:           {x:320,  y:80},
+  citizen_documents:  {x:30,   y:80},
+  cases:              {x:600,  y:340},
+  case_documents:     {x:300,  y:530},
+  hearings:           {x:880,  y:530},
+  proceedings:        {x:1180, y:530},
+  judgments:          {x:600,  y:760},
+  court_orders:       {x:900,  y:760},
+  compliance_records: {x:30,   y:760},
+  audits:             {x:280,  y:920},
+  reports:            {x:1200, y:760},
+  notifications:      {x:1200, y:960},
+};
+const TW = 230; // table width
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let selKey  = null;
+let pan     = {x:40,y:30};
+let zoom    = 1;
+let drag    = null;
+let panDrag = null;
+
+// ════════════════════════════════════════════════════════
+// BUILD CARDS
+// ════════════════════════════════════════════════════════
+function buildCards(){
+  const canvas = document.getElementById('canvas');
+  Object.entries(TABLES).forEach(([key,t])=>{
+    const pos = POSITIONS[key];
+    const d = document.createElement('div');
+    d.className='tbl'; d.id='tbl-'+key;
+    d.style.left = pos.x+'px';
+    d.style.top  = pos.y+'px';
+
+    // head
+    const h=document.createElement('div'); h.className='tbl-head';
+    h.style.cssText=`background:${t.color}1f;color:${t.color};border-bottom:1px solid ${t.color}30`;
+    h.innerHTML=`<span class="ic">${t.ic}</span>${t.n}`;
+    d.appendChild(h);
+
+    // body
+    const b=document.createElement('div'); b.className='tbl-body';
+    t.cols.forEach(c=>{
+      if(c.ev){
+        const e=document.createElement('div'); e.className='ev';
+        e.textContent=c.ev; b.appendChild(e); return;
+      }
+      const r=document.createElement('div');
+      r.className='col'+(c.pk?' pk':c.fk?' fk':'');
+      let bg='';
+      if(c.pk) bg+='<span class="bdg bpk">PK</span>';
+      if(c.fk) bg+='<span class="bdg bfk">FK</span>';
+      if(c.uq) bg+='<span class="bdg buq">UNQ</span>';
+      if(c.en) bg+='<span class="bdg ben">EN</span>';
+      r.innerHTML=bg+`<span class="cname">${c.nm}</span><span class="ctype">${c.tp||''}</span>`;
+      b.appendChild(r);
+    });
+    d.appendChild(b);
+
+    // drag + click
+    d.addEventListener('mousedown', e=>{ drag={key,sx:e.clientX,sy:e.clientY,ox:pos.x,oy:pos.y}; e.stopPropagation(); });
+    d.addEventListener('click', e=>{ if(!wasDrag) selectTable(key); });
+
+    canvas.appendChild(d);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// CONNECTION LINE HELPERS
+// ════════════════════════════════════════════════════════
+function getCenter(key){
+  const pos = POSITIONS[key];
+  const el  = document.getElementById('tbl-'+key);
+  const h   = el ? el.offsetHeight : 200;
+  return { x: pos.x + TW/2, y: pos.y + h/2 };
+}
+
+function getEdgePoint(fromKey, toKey){
+  const fp = POSITIONS[fromKey];
+  const tp = POSITIONS[toKey];
+  const fel = document.getElementById('tbl-'+fromKey);
+  const tel = document.getElementById('tbl-'+toKey);
+  const fh  = fel ? fel.offsetHeight : 200;
+  const th  = tel ? tel.offsetHeight : 200;
+
+  const fc = {x: fp.x+TW/2, y: fp.y+fh/2};
+  const tc = {x: tp.x+TW/2, y: tp.y+th/2};
+
+  // exit from right/left/top/bottom of source
+  const dx = tc.x - fc.x;
+  const dy = tc.y - fc.y;
+
+  let sx,sy,tx,ty;
+
+  if(Math.abs(dx) > Math.abs(dy)){
+    // horizontal dominant
+    sx = dx>0 ? fp.x+TW : fp.x;
+    sy = fp.y + fh/2;
+    tx = dx>0 ? tp.x : tp.x+TW;
+    ty = tp.y + th/2;
+  } else {
+    // vertical dominant
+    sx = fp.x + TW/2;
+    sy = dy>0 ? fp.y+fh : fp.y;
+    tx = tp.x + TW/2;
+    ty = dy>0 ? tp.y : tp.y+th;
+  }
+  return {sx,sy,tx,ty};
+}
+
+function curvePath(sx,sy,tx,ty){
+  const dx = tx-sx, dy = ty-sy;
+  const cx1 = sx + dx*0.4 + (Math.abs(dy)*0.15)*Math.sign(dx);
+  const cy1 = sy + dy*0.1;
+  const cx2 = tx - dx*0.4 - (Math.abs(dy)*0.15)*Math.sign(dx);
+  const cy2 = ty - dy*0.1;
+  return `M${sx},${sy} C${cx1},${cy1} ${cx2},${cy2} ${tx},${ty}`;
+}
+
+function drawAllLines(){
+  const svg = document.getElementById('svg-lines');
+  svg.innerHTML='';
+  RELS.forEach(r=>{
+    if(!r.t) return;
+    const {sx,sy,tx,ty} = getEdgePoint(r.f, r.t);
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', curvePath(sx,sy,tx,ty));
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke','rgba(255,255,255,0.06)');
+    path.setAttribute('stroke-width','1.5');
+    path.setAttribute('id',`line-${r.f}-${r.t}-${r.fk}`);
+    svg.appendChild(path);
+  });
+}
+
+function highlightLines(key){
+  // reset all
+  document.querySelectorAll('#svg-lines path').forEach(p=>{
+    p.setAttribute('stroke','rgba(255,255,255,0.06)');
+    p.setAttribute('stroke-width','1.5');
+    p.setAttribute('stroke-dasharray','none');
+    p.setAttribute('filter','none');
+    p.setAttribute('opacity','1');
+  });
+  if(!key) return;
+
+  const outRels = RELS.filter(r=>r.f===key&&r.t);
+  const inRels  = RELS.filter(r=>r.t===key);
+
+  // dim unrelated lines
+  document.querySelectorAll('#svg-lines path').forEach(p=>{
+    const id = p.getAttribute('id')||'';
+    const parts = id.replace('line-','').split('-');
+    const from = parts.slice(0,-1).join('-');
+    const isOut = outRels.some(r=>id===`line-${r.f}-${r.t}-${r.fk}`);
+    const isIn  = inRels.some(r=>id===`line-${r.f}-${r.t}-${r.fk}`);
+    if(!isOut && !isIn) p.setAttribute('opacity','0.04');
+  });
+
+  // glow outgoing (red)
+  outRels.forEach(r=>{
+    const p = document.getElementById(`line-${r.f}-${r.t}-${r.fk}`);
+    if(!p) return;
+    const {sx,sy,tx,ty} = getEdgePoint(r.f,r.t);
+    p.setAttribute('stroke','#ef4444');
+    p.setAttribute('stroke-width','2.5');
+    p.setAttribute('opacity','1');
+    p.setAttribute('filter','drop-shadow(0 0 6px #ef444499)');
+    addArrow(r.f,r.t,r.fk,tx,ty,'#ef4444');
+    addLabel(r,sx,sy,tx,ty,'#ef4444');
+  });
+
+  // glow incoming (green)
+  inRels.forEach(r=>{
+    const p = document.getElementById(`line-${r.f}-${r.t}-${r.fk}`);
+    if(!p) return;
+    const {sx,sy,tx,ty} = getEdgePoint(r.f,r.t);
+    p.setAttribute('stroke','#22c55e');
+    p.setAttribute('stroke-width','2.5');
+    p.setAttribute('opacity','1');
+    p.setAttribute('filter','drop-shadow(0 0 6px #22c55e99)');
+    addArrow(r.f,r.t,r.fk,tx,ty,'#22c55e');
+    addLabel(r,sx,sy,tx,ty,'#22c55e');
+  });
+}
+
+function addArrow(from,to,fk,tx,ty,color){
+  const svg = document.getElementById('svg-lines');
+  const {sx,sy} = getEdgePoint(from,to);
+  // arrowhead at target end
+  const angle = Math.atan2(ty-sy,tx-sx)*180/Math.PI;
+  const id=`arr-${from}-${to}-${fk}`;
+  const existing = document.getElementById(id);
+  if(existing) existing.remove();
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('id',id);
+  g.setAttribute('transform',`translate(${tx},${ty}) rotate(${angle})`);
+  const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points','-10,-4 0,0 -10,4');
+  poly.setAttribute('fill',color);
+  poly.setAttribute('filter',`drop-shadow(0 0 4px ${color}88)`);
+  g.appendChild(poly);
+  svg.appendChild(g);
+}
+
+function addLabel(r,sx,sy,tx,ty,color){
+  const svg = document.getElementById('svg-lines');
+  const mx = (sx+tx)/2, my = (sy+ty)/2;
+  const id=`lbl-${r.f}-${r.t||'none'}-${r.fk}`;
+  const existing = document.getElementById(id);
+  if(existing) existing.remove();
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('id',id);
+
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x', mx-30); rect.setAttribute('y', my-10);
+  rect.setAttribute('width','60'); rect.setAttribute('height','18');
+  rect.setAttribute('rx','5');
+  rect.setAttribute('fill','#0e1118');
+  rect.setAttribute('stroke',color);
+  rect.setAttribute('stroke-width','1');
+  rect.setAttribute('stroke-opacity','0.7');
+  g.appendChild(rect);
+
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',mx); txt.setAttribute('y',my+1);
+  txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('dominant-baseline','central');
+  txt.setAttribute('fill',color);
+  txt.setAttribute('font-size','9');
+  txt.setAttribute('font-family','DM Mono, monospace');
+  txt.setAttribute('font-weight','600');
+  txt.textContent = r.card;
+  g.appendChild(txt);
+  svg.appendChild(g);
+}
+
+// ════════════════════════════════════════════════════════
+// SELECT / CLEAR
+// ════════════════════════════════════════════════════════
+function selectTable(key){
+  selKey = key;
+  document.getElementById('btn-clear').style.display='flex';
+  const t = TABLES[key];
+  const outRels = RELS.filter(r=>r.f===key);
+  const inRels  = RELS.filter(r=>r.t===key);
+  const outKeys = new Set(outRels.map(r=>r.t).filter(Boolean));
+  const inKeys  = new Set(inRels.map(r=>r.f));
+
+  // update cards
+  document.querySelectorAll('.tbl').forEach(el=>{
+    const k = el.id.replace('tbl-','');
+    el.classList.remove('sel','connected','dim');
+    if(k===key){
+      el.classList.add('sel');
+      el.style.boxShadow=`0 0 0 2.5px ${t.color}, 0 0 30px ${t.color}44`;
+    } else if(inKeys.has(k)||outKeys.has(k)){
+      el.classList.add('connected');
+      const c = TABLES[k]?.color||'#4f8ef7';
+      const isOut = outKeys.has(k);
+      const gl = isOut ? '#ef4444' : '#22c55e';
+      el.style.boxShadow=`0 0 0 2px ${gl}99, 0 0 16px ${gl}33`;
+    } else {
+      el.classList.add('dim');
+      el.style.boxShadow='none';
+    }
+  });
+
+  highlightLines(key);
+  renderPanel(key, outRels, inRels);
+}
+
+function clearSelection(){
+  selKey=null;
+  document.getElementById('btn-clear').style.display='none';
+  document.querySelectorAll('.tbl').forEach(el=>{
+    el.classList.remove('sel','connected','dim');
+    el.style.boxShadow='none';
+  });
+  document.querySelectorAll('#svg-lines path').forEach(p=>{
+    p.setAttribute('stroke','rgba(255,255,255,0.06)');
+    p.setAttribute('stroke-width','1.5');
+    p.setAttribute('opacity','1');
+    p.setAttribute('filter','none');
+  });
+  document.querySelectorAll('#svg-lines polygon,#svg-lines text,#svg-lines rect').forEach(e=>e.remove());
+  document.getElementById('p-empty').style.display='flex';
+  document.getElementById('p-content').classList.remove('vis');
+  document.getElementById('p-content').innerHTML='';
+}
+
+// ════════════════════════════════════════════════════════
+// PANEL
+// ════════════════════════════════════════════════════════
+function renderPanel(key, outRels, inRels){
+  const t = TABLES[key];
+  const pc = document.getElementById('p-content');
+  document.getElementById('p-empty').style.display='none';
+  pc.classList.add('vis');
+  pc.innerHTML=`
+    <div class="p-name" style="color:${t.color}">${t.ic} ${t.n}</div>
+    <div class="p-sub">${outRels.length} outgoing FK${outRels.length!==1?'s':''} · ${inRels.length} incoming ref${inRels.length!==1?'s':''}</div>
+    <div class="p-desc" style="border-color:${t.color}">${t.desc}</div>
+  `;
+
+  // outgoing
+  const os = document.createElement('div'); os.className='p-sec';
+  os.innerHTML=`<span style="color:#ef4444">⬆</span> References (${outRels.length} outgoing FK${outRels.length!==1?'s':''})`;
+  pc.appendChild(os);
+  if(!outRels.length){
+    const n=document.createElement('div'); n.className='no-conn'; n.textContent='No outgoing foreign keys.'; pc.appendChild(n);
+  } else outRels.forEach(r=>pc.appendChild(buildConnCard(r,'out',t.color)));
+
+  // incoming
+  const is = document.createElement('div'); is.className='p-sec';
+  is.innerHTML=`<span style="color:#22c55e">⬇</span> Referenced by (${inRels.length} incoming ref${inRels.length!==1?'s':''})`;
+  pc.appendChild(is);
+  if(!inRels.length){
+    const n=document.createElement('div'); n.className='no-conn'; n.textContent='No tables reference this one.'; pc.appendChild(n);
+  } else inRels.forEach(r=>pc.appendChild(buildConnCard(r,'in',t.color)));
+}
+
+function buildConnCard(r, dir, baseColor){
+  const isOut = dir==='out';
+  const otherKey = isOut ? r.t : r.f;
+  const other = TABLES[otherKey];
+  const ac = isOut ? '#ef4444' : '#22c55e';
+  const c = document.createElement('div'); c.className='conn-card';
+  c.style.borderColor=ac+'30';
+
+  const cardType = {'N : 1':'Many-to-One','1 : 1':'One-to-One','generic':'Generic ref'}[r.card]||r.card;
+  const nullStr  = r.null ? '<span style="color:#f59e0b">⚠ nullable</span>' : '<span style="color:#22c55e">✓ NOT NULL</span>';
+
+  c.innerHTML=`
+    <div class="conn-h" style="background:${ac}12;color:${ac}">
+      <span style="font-size:13px">${other?.ic||'📋'}</span>
+      <span>${isOut?'→':'←'} ${otherKey||'(generic)'}</span>
+      <span style="margin-left:auto;font-size:9px;opacity:.7;font-family:var(--mono)">${r.card}</span>
+    </div>
+    <div class="conn-b">
+      <div><span class="conn-badge" style="background:${ac}18;color:${ac}">${isOut?'⬆ outgoing':'⬇ incoming'} · ${cardType}</span></div>
+      <div class="conn-fk">FK: <code>${r.fk}</code> &nbsp;·&nbsp; ${nullStr}${r.uq?' &nbsp;·&nbsp; <span style="color:#2dd4bf">UNIQUE</span>':''}</div>
+      <div class="conn-note">${r.desc}</div>
+    </div>
+  `;
+
+  if(other){
+    c.addEventListener('click', e=>{
+      e.stopPropagation();
+      const el = document.getElementById('tbl-'+otherKey);
+      if(el){
+        const pos = POSITIONS[otherKey];
+        panTo(pos.x, pos.y);
+        setTimeout(()=>selectTable(otherKey),200);
+      }
+    });
+  }
+  return c;
+}
+
+// ════════════════════════════════════════════════════════
+// PAN & ZOOM
+// ════════════════════════════════════════════════════════
+function applyTransform(){
+  document.getElementById('canvas').style.transform=`translate(${pan.x}px,${pan.y}px) scale(${zoom})`;
+}
+
+function panTo(x,y){
+  const wrap = document.getElementById('wrap');
+  pan.x = wrap.clientWidth/2 - (x+TW/2)*zoom;
+  pan.y = wrap.clientHeight/2 - y*zoom;
+  applyTransform();
+}
+
+let wasDrag = false;
+document.addEventListener('mousemove', e=>{
+  if(drag){
+    wasDrag = true;
+    const dx = (e.clientX-drag.sx)/zoom;
+    const dy = (e.clientY-drag.sy)/zoom;
+    POSITIONS[drag.key].x = drag.ox+dx;
+    POSITIONS[drag.key].y = drag.oy+dy;
+    const el = document.getElementById('tbl-'+drag.key);
+    el.style.left = POSITIONS[drag.key].x+'px';
+    el.style.top  = POSITIONS[drag.key].y+'px';
+    drawAllLines();
+    if(selKey) highlightLines(selKey);
+  } else if(panDrag){
+    pan.x = panDrag.ox + (e.clientX-panDrag.sx);
+    pan.y = panDrag.oy + (e.clientY-panDrag.sy);
+    applyTransform();
+  }
+});
+
+document.addEventListener('mouseup', ()=>{
+  drag = null; panDrag = null;
+  setTimeout(()=>wasDrag=false,10);
+});
+
+document.getElementById('wrap').addEventListener('mousedown', e=>{
+  if(e.target.closest('.tbl')) return;
+  panDrag = {sx:e.clientX,sy:e.clientY,ox:pan.x,oy:pan.y};
+  document.getElementById('wrap').classList.add('dragging');
+});
+
+document.getElementById('wrap').addEventListener('mouseup',()=>{
+  document.getElementById('wrap').classList.remove('dragging');
+});
+
+document.getElementById('wrap').addEventListener('wheel', e=>{
+  e.preventDefault();
+  const rect = document.getElementById('wrap').getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const dz = e.deltaY<0 ? 1.1 : 0.91;
+  pan.x = mx - (mx-pan.x)*dz;
+  pan.y = my - (my-pan.y)*dz;
+  zoom = Math.max(0.3, Math.min(2, zoom*dz));
+  applyTransform();
+},{passive:false});
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+buildCards();
+applyTransform();
+// Draw lines after a tick so card heights are known
+setTimeout(()=>{
+  drawAllLines();
+  // centre the diagram
+  panTo(600, 400);
+}, 80);
+</script>
+</body>
+</html>
